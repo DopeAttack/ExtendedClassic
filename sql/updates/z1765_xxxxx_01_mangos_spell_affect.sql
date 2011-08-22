@@ -1,0 +1,8 @@
+
+DELETE FROM `spell_affect` WHERE `entry` IN (18275, 18274, 18273, 18272, 18271) AND effectId = 1;
+INSERT INTO spell_affect ( entry , effectId , SpellFamilyMask ) VALUES
+(18275, 1, 4295492618),
+(18274, 1, 4295492618),
+(18273, 1, 4295492618),
+(18272, 1, 4295492618),
+(18271, 1, 4295492618);
