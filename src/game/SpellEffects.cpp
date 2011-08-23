@@ -971,6 +971,10 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
             // Charge
             if ((m_spellInfo->SpellFamilyFlags & UI64LIT(0x1)) && m_spellInfo->SpellVisual == 867)
             {
+				if (((Player*)m_caster)->m_movementInfo.HasMovementFlag(MovementFlags(MOVEFLAG_FALLING | MOVEFLAG_FALLINGFAR)))
+				
+					((Player*)m_caster)->SetFallInformation(0, m_caster->GetPositionZ());
+					
                 int32 chargeBasePoints0 = damage;
                 m_caster->CastCustomSpell(m_caster, 34846, &chargeBasePoints0, NULL, NULL, true);
                 return;
