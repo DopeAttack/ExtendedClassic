@@ -2432,15 +2432,10 @@ void Spell::prepare(SpellCastTargets const* targets, Aura* triggeredByAura)
 
     // stealth must be removed at cast starting (at show channel bar)
     // skip triggered spell (item equip spell casting and other not explicit character casts/item uses)
-    if (!m_IsTriggeredSpell && isSpellBreakStealth(m_spellInfo))
+    if ( !m_IsTriggeredSpell && isSpellBreakStealth(m_spellInfo) )
     {
-		// Sap (Kopfnuss)- don't exit Stealth yet to prevent getting in combat and making Sap impossible to cast
-		// Removing Stealth depends on talent later in Spell::cast
-        
-		if (!(m_spellInfo->SpellFamilyName == SPELLFAMILY_ROGUE && m_spellInfo->SpellFamilyFlags & UI64LIT(0x00000080)))
-            m_caster->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
-        
-		m_caster->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
+        m_caster->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
+        m_caster->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
     }
 
     sMod.spellPrepare(this, m_caster);  // extra for prepare
@@ -2537,7 +2532,7 @@ void Spell::cast(bool skipCheck)
     UpdatePointers();
 
     // cancel at lost main target unit
-    if (!m_targets.getUnitTarget() && m_targets.getUnitTargetGUID() && m_targets.getUnitTargetGUID() != m_caster->GetGUID())
+    if (!m_targets.getUnitTarget() && m_targets.getUnitTargetGuid() && m_targets.getUnitTargetGuid() != m_caster->GetObjectGuid())
     {
         cancel();
         m_caster->DecreaseCastCounter();
@@ -2581,7 +2576,7 @@ void Spell::cast(bool skipCheck)
             if (m_spellInfo->Mechanic == MECHANIC_BANDAGE)
                 AddPrecastSpell(11196);                     // Recently Bandaged
             // Divine Shield, Divine Protection (Blessing of Protection in paladin switch case)
-            else if (m_spellInfo->Mechanic == MECHANIC_INVULNERABILITY)
+            else if(m_spellInfo->Mechanic == MECHANIC_INVULNERABILITY)
                 AddPrecastSpell(25771);                     // Forbearance
             break;
         }
@@ -2590,7 +2585,7 @@ void Spell::cast(bool skipCheck)
         case SPELLFAMILY_PRIEST:
         {
             // Power Word: Shield
-            if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000000001))
+            if(m_spellInfo->SpellFamilyName == SPELLFAMILY_PRIEST && m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000000001))
                 AddPrecastSpell(6788);                      // Weakened Soul
 
             switch(m_spellInfo->Id)
@@ -2609,35 +2604,10 @@ void Spell::cast(bool skipCheck)
         case SPELLFAMILY_PALADIN:
         {
             // Blessing of Protection (Divine Shield, Divine Protection in generic switch case)
-            if (m_spellInfo->Mechanic == MECHANIC_INVULNERABILITY && m_spellInfo->Id != 25771)
+            if(m_spellInfo->Mechanic == MECHANIC_INVULNERABILITY && m_spellInfo->Id != 25771)
                 AddPrecastSpell(25771);                     // Forbearance
             break;
         }
-		case SEPLLFAMILY_ROGUE:
-			// Remove Stealth when no talent point in Improved Steahlth or bad luck :(
-			is(m_sepllInfo->SpellFamilyFlags & UI64LIT(0x00000080) && m_caster->GetTypeId() == TYPEID_PLAYER)
-			{
-				//Improved Sap
-				if (m_caster->GetAura(14076,SpellEffectIndex(0)) ||
-					m_caster->GetAura(14094,SpellEffectIndex(0)) ||
-					m_caster->GetAura(14095,SpellEffectIndex(0)))
-				{
-					Unit::AuraList const& procAuras = m_caster->GetAurasByType(SPELL_AURA_PROC_TRIGGER_SPELL);
-					for(Unit:AuraList::const_iterator i = procAuras.begin(); i != procAuras.end(); ++i)
-					{
-						if ((*i)->GetSpellProto()->SpellIconID == 249 && !roll_chance_i ((*i)->GetSpellProto()->procChance))
-						{
-							// Bad luck appeared here
-							m_caster->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
-							break;
-						}
-					}
-				}
-			}
-			else
-				m_caster->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
-			break;
-		}
         default:
             break;
     }
@@ -3969,12 +3939,15 @@ SpellCastResult Spell::CheckCast(bool strict)
                 return SPELL_FAILED_TARGET_AURASTATE;
         }
 
-        //Must be behind the target.        
-        if (((m_spellInfo->AttributesEx2 == 0x100000 && (m_spellInfo->AttributesEx & 0x200) == 0x200) ||
-             (m_spellInfo->SpellFamilyName == SPELLFAMILY_GENERIC && m_spellInfo->SpellIconID == 243)) && target->HasInArc(M_PI_F, m_caster))
+        //Must be behind the target.
+        if( m_spellInfo->AttributesEx2 == 0x100000 && (m_spellInfo->AttributesEx & 0x200) == 0x200 && target->HasInArc(M_PI_F, m_caster) )
         {
-			SendInterrupted(2);
-			return SPELL_FAILED_NOT_BEHIND;
+            //Exclusion for Pounce: Facing Limitation was removed in 2.0.1, but it still uses the same, old Ex-Flags
+            if (!m_spellInfo->IsFitToFamily(SPELLFAMILY_DRUID, UI64LIT(0x0000000000020000)))
+            {
+                SendInterrupted(2);
+                return SPELL_FAILED_NOT_BEHIND;
+            }
         }
 
         //Target must be facing you.
@@ -4992,7 +4965,7 @@ SpellCastResult Spell::CheckRange(bool strict)
     Unit *target = m_targets.getUnitTarget();
 
     // special range cases
-    switch (m_spellInfo->rangeIndex)
+    switch(m_spellInfo->rangeIndex)
     {
         // self cast doesn't need range checking -- also for Starshards fix
         case SPELL_RANGE_IDX_SELF_ONLY:
@@ -5017,17 +4990,17 @@ SpellCastResult Spell::CheckRange(bool strict)
         }
     }
 
-    // add radius of caster and ~5 yds "give" for non stricred (landing) check
+    //add radius of caster and ~5 yds "give" for non stricred (landing) check
     float range_mod = strict ? 1.25f : 6.25;
 
     SpellRangeEntry const* srange = sSpellRangeStore.LookupEntry(m_spellInfo->rangeIndex);
     float max_range = GetSpellMaxRange(srange) + range_mod;
     float min_range = GetSpellMinRange(srange);
 
-    if (Player* modOwner = m_caster->GetSpellModOwner())
+    if(Player* modOwner = m_caster->GetSpellModOwner())
         modOwner->ApplySpellMod(m_spellInfo->Id, SPELLMOD_RANGE, max_range, this);
 
-    if (target && target != m_caster)
+    if(target && target != m_caster)
     {
         // distance from target in checks
         float dist = m_caster->GetCombatDistance(target);
@@ -5042,25 +5015,14 @@ SpellCastResult Spell::CheckRange(bool strict)
     }
 
     // TODO verify that such spells really use bounding radius
-    if (m_targets.m_targetMask == TARGET_FLAG_DEST_LOCATION && m_targets.m_destX != 0 && m_targets.m_destY != 0 && m_targets.m_destZ != 0)
+    if(m_targets.m_targetMask == TARGET_FLAG_DEST_LOCATION && m_targets.m_destX != 0 && m_targets.m_destY != 0 && m_targets.m_destZ != 0)
     {
-        if (!m_caster->IsWithinDist3d(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, max_range))
+        if(!m_caster->IsWithinDist3d(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, max_range))
             return SPELL_FAILED_OUT_OF_RANGE;
-        if (min_range && m_caster->IsWithinDist3d(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, min_range))
+        if(min_range && m_caster->IsWithinDist3d(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, min_range))
             return SPELL_FAILED_TOO_CLOSE;
     }
-	
-	if (Pet* casterPet = m_caster->GetPet())
-	{
-		// Force Men Pet or Health Funnel spell casts to be interreupted when out of range
-		if (((m_spellInfo->SpellFamilyName == SPELLFAMILY_HUNTER && m_spellInfo->SpellIconID == 267) ||
-			 (m_spellInfo->SpellFamilyName == SPELLFAMILY_WARLOCK && m_spellInfo->SpellIconID == 153)) &&
-			 !m_caster->IsWithinDistInMap(casterPet,GetSpellMaxRange(srange)))
-			 {
-				return SPELL_FAILED_OUT_OF_RANGE;
-			 }
-	}
-	
+
     return SPELL_CAST_OK;
 }
 
