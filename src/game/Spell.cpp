@@ -3018,9 +3018,22 @@ void Spell::finish(bool ok)
                 }
             }
         }
-        if (needDrop)
+        
+	if (needDrop) {
             ((Player*)m_caster)->ClearComboPoints();
-    }
+    
+	
+	 int chance = 0;
+	 if (m_caster->HasAura(14156))
+		chance = 20;
+	 else if (m_caster->HasAura(14160))
+		chance = 40;
+	 else if (m_caster->HasAura(14161))
+		chance = 60;
+	 if (roll_chance_i(chance))
+		((Player*)m_caster)->AddComboPoints(unitTarget,1);
+	}
+  }
 
     // call triggered spell only at successful cast (after clear combo points -> for add some if need)
     if(!m_TriggerSpells.empty())
