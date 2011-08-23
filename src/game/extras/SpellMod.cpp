@@ -40,7 +40,7 @@ void ModClass::auraApplyModifier(Aura *aura, AuraType aType, bool apply, bool re
 void ModClass::applyDiminishingToDuration(Unit *unit, Unit *caster, int32 &duration, DiminishingGroup group)
 {
     // [MOD] Duration of crowd control abilities on pvp target is limited by 10 sec. (after patch 2.2.0)
-    if(getModConfig(MODCONFIG_BOOL_TBC_DIMINISHING_DURATION) && duration > 10*IN_MILLISECONDS && IsDiminishingReturnsGroupDurationLimited(group))
+    if(getModConfig(MODCONFIG_BOOL_TBC_DIMINISHING_DURATION) && duration > 16*IN_MILLISECONDS && IsDiminishingReturnsGroupDurationLimited(group))
     {
         // test pet/charm masters instead pets/charmeds
         Unit const* targetOwner = unit->GetCharmerOrOwner();
@@ -50,7 +50,7 @@ void ModClass::applyDiminishingToDuration(Unit *unit, Unit *caster, int32 &durat
         Unit const* source = casterOwner ? casterOwner : caster;
 
         if(target->GetTypeId() == TYPEID_PLAYER && source->GetTypeId() == TYPEID_PLAYER)
-            duration = 10000;
+            duration = 16000;
     }
 }
 
