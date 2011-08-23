@@ -2434,8 +2434,10 @@ void Spell::prepare(SpellCastTargets const* targets, Aura* triggeredByAura)
     // skip triggered spell (item equip spell casting and other not explicit character casts/item uses)
     if ( !m_IsTriggeredSpell && isSpellBreakStealth(m_spellInfo) )
     {
-        m_caster->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
-        m_caster->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
+       // Dont remove Steahlth on rogues - we do it on spell::cast
+	   if (!(m_caster->getClass() == CLASS_ROGUE))
+		m_caster->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
+         m_caster->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
     }
 
     sMod.spellPrepare(this, m_caster);  // extra for prepare
@@ -2744,7 +2746,29 @@ uint64 Spell::handle_delayed(uint64 t_offset)
 
 void Spell::_handle_immediate_phase()
 {
-    // handle some immediate features of the spell here
+	// Remove Stealth on Spell:Cast instead of Spell:Prepare
+	if ( m_caster->getClass() == CLASS_ROGUE && !m_IsTriggeredSpell && isSpellBreakStealth(m_spellInfo) )
+		{
+		int chance = 0;
+		// Improved Sap on Sap
+		switch(m_spellInfo->Id) {
+		case 6770:
+		case 2070:
+		case 11297:
+			if(m_caster->HasAura(14095)) 	  // Rank 3
+				chance = 90;
+			else if(m_caster->HasAura(14094)) // Rank 2
+				chance = 60;
+			else if(m_caster->HasAura(14076)) // Rank 1
+				chance = 30;
+			break;
+		default: break;
+	}
+	if(chance == 0 || !roll_chance_i(chance))
+		m_caster->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
+ }
+
+ // handle some immediate features of the spell here
     HandleThreatSpells();
 
     m_needSpellLog = IsNeedSendToClient();
