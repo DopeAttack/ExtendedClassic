@@ -3718,6 +3718,24 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     unitTarget->CastSpell(unitTarget, 24321, true, NULL, NULL, m_caster->GetObjectGuid());
                     return;
                 }
+				// Hakkar Blood Siphon
+				case 24324:
+				{
+					if (!unitTarget || !unitTarget->isAlive())
+						return;
+				
+				ThreatList const& tList = m_caster->getThreatManager().getThreatList();
+				for (ThreatList::const_iterator i = tList.begin();i != tList.end(); ++i){
+					if (Unit* pUnit = m_caster->GetMap()->GetUnit((*i)->getUnitGuid()))
+					{
+					 if(pUnit->HasAura(24321))
+					  pUnit->CastSpell(m_caster,24323,true);
+					 else
+					  pUnit->CastSpell(m_caster,24322,true); // Auf Hakkar
+				}
+			  }
+						return;
+					}
                 case 24590:                                 // Brittle Armor - need remove one 24575 Brittle Armor aura
                     unitTarget->RemoveAuraHolderFromStack(24575);
                     return;

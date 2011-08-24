@@ -53,7 +53,12 @@ void ModClass::applyDiminishingToDuration(Unit *unit, Unit *caster, int32 &durat
             duration = 16000;
     }
 }
-
+void ModClass::getSpellDuration(const SpellEntry *spellInfo, SpellEffectIndex effIndex,int32 &duration)
+{
+	if(spellInfo->Id == 25198)
+		duration = 90000;
+		
+}
 void ModClass::getSpellCastTime(const SpellEntry *spellInfo, const Spell *spell,int32 &castTime)
 {
     // [workaround] holy light need script effect, but 19968 spell for it have 2.5 cast time sec

@@ -83,6 +83,7 @@ class MANGOS_DLL_SPEC ModClass
         void spellEffect(Spell* spell, uint8 eff, SpellEffectIndex i);
         void auraApplyModifier(Aura* aura,AuraType aType,bool apply,bool real);
         void getSpellCastTime(SpellEntry const* spellInfo, Spell const* spell, int32 &castTime);
+		void getSpellDuration(SpellEntry const* spellInfo, SpellEffectIndex effIndex, int32 &duration);
 
         // ==== Unit mods ==== //
 

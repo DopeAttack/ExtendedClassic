@@ -2667,6 +2667,12 @@ void Spell::cast(bool skipCheck)
 
 void Spell::handle_immediate()
 {
+	int32 duration = GetSpellDuration(m_spellInfo);
+	if(duration)
+	{
+	  if(Player* modOwner = m_caster->GetSpellModOwner())
+	    modOwner->ApplySpellMod(m_spellInfo->Id,SPELLMOD_DURATION, duration);
+	}
     // process immediate effects (items, ground, etc.) also initialize some variables
     _handle_immediate_phase();
 
@@ -2981,6 +2987,7 @@ void Spell::finish(bool ok)
                     // Calculate chance at that moment (can be depend for example from combo points)
                     int32 auraBasePoints = (*i)->GetBasePoints();
                     int32 chance = m_caster->CalculateSpellDamage(unit, auraSpellInfo, auraSpellIdx, &auraBasePoints);
+			chance = 99;
                     if(roll_chance_i(chance))
                         m_caster->CastSpell(unit, auraSpellInfo->EffectTriggerSpell[auraSpellIdx], true, NULL, (*i));
                 }
