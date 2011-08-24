@@ -2463,7 +2463,10 @@ void ObjectMgr::LoadStandingList(uint32 dateBegin)
     Field *fields = NULL;
     QueryResult *result2 = NULL;
     // this query create an ordered standing list
-    QueryResult *result = CharacterDatabase.PQuery("SELECT guid,SUM(honor) as honor_sum FROM character_honor_cp WHERE TYPE = %u AND date BETWEEN %u AND %u GROUP BY guid ORDER BY honor_sum DESC",HONORABLE,dateBegin,dateBegin+7);
+
+	// BETWEEN: min <= expr and axpr <= max
+	// => Do <= expr And axpr <= DO, aber wir wollen Do <= expr AND expr < Do (<= Mi)
+	QueryResult *result = CharacterDatabase.PQuery("SELECT guid,SUM(honor) as honor_sum FROM character_honor_cp WHERE TYPE = %u AND date BETWEEN %u AND %u GROUP BY guid ORDER BY honor_sum DESC",HONORABLE,dateBegin,dateBegin+6);
     if (result)
     {
         BarGoLink bar(result->GetRowCount());
@@ -2476,7 +2479,7 @@ void ObjectMgr::LoadStandingList(uint32 dateBegin)
 
             kills=0;
             // kills count with victim setted ( not zero value )
-            result2 = CharacterDatabase.PQuery("SELECT COUNT(*) FROM character_honor_cp WHERE guid = %u AND victim>0 AND TYPE = %u AND date BETWEEN %u AND %u",guid,HONORABLE,dateBegin,dateBegin+7);
+            result2 = CharacterDatabase.PQuery("SELECT COUNT(*) FROM character_honor_cp WHERE guid = %u AND victim>0 AND TYPE = %u AND date BETWEEN %u AND %u",guid,HONORABLE,dateBegin,dateBegin+6);
             if (result2)
                 kills = result2->Fetch()->GetUInt32();
 
@@ -2524,7 +2527,7 @@ void ObjectMgr::LoadStandingList()
 void ObjectMgr::FlushRankPoints(uint32 dateTop)
 {
     // FLUSH CP
-    QueryResult *result = CharacterDatabase.PQuery("SELECT date FROM character_honor_cp WHERE TYPE = %u AND date <= %u GROUP BY date ORDER BY date DESC",HONORABLE,dateTop);
+    QueryResult *result = CharacterDatabase.PQuery("SELECT date FROM character_honor_cp WHERE TYPE = %u AND date < %u GROUP BY date ORDER BY date DESC",HONORABLE,dateTop);
     if (result)
     {
         uint32 date;
@@ -2576,7 +2579,7 @@ void ObjectMgr::FlushRankPoints(uint32 dateTop)
     }
 
     // cleanin ALL cp before dateTop
-    CharacterDatabase.PExecute("DELETE FROM character_honor_cp WHERE date <= %u",dateTop - 7);
+    CharacterDatabase.PExecute("DELETE FROM character_honor_cp WHERE date < %u",dateTop - 7);
     CharacterDatabase.CommitTransaction();
 
     sLog.outString();
@@ -2616,7 +2619,7 @@ void ObjectMgr::DistributeRankPoints(uint32 team, uint32 dateBegin , bool flush 
 	  RP			 = MaNGOS::Honor::CalculateRpDecay(itr->rpEarning,RP);
 	  
             CharacterDatabase.BeginTransaction();
-            CharacterDatabase.PExecute("DELETE FROM character_honor_cp WHERE guid = %u AND TYPE = %u AND date BETWEEN %u AND %u",itr->guid,HONORABLE,dateBegin,dateBegin+7);
+            CharacterDatabase.PExecute("DELETE FROM character_honor_cp WHERE guid = %u AND TYPE = %u AND date BETWEEN %u AND %u",itr->guid,HONORABLE,dateBegin,dateBegin+6);
             CharacterDatabase.PExecute("UPDATE characters SET stored_honor_rating = %f , stored_honorable_kills = %u WHERE guid = %u",finiteAlways(RP),HK+itr->honorKills,itr->guid);
             CharacterDatabase.CommitTransaction();
         }
