@@ -823,8 +823,8 @@ void Pet::UpdateAttackPowerAndDamage(bool ranged)
     {
         if(getPetType() == HUNTER_PET)                      //hunter pets benefit from owner's attack power
         {
-            bonusAP = owner->GetTotalAttackPowerValue(RANGED_ATTACK) * 0.22f;
-            SetBonusDamage( int32(owner->GetTotalAttackPowerValue(RANGED_ATTACK) * 0.125f));
+            bonusAP = owner->GetTotalAttackPowerValue(RANGED_ATTACK) * 0.0f;
+            SetBonusDamage( int32(owner->GetTotalAttackPowerValue(RANGED_ATTACK) * 0.0));
         }
         //demons benefit from warlocks shadow or fire damage
         else if(getPetType() == SUMMON_PET && owner->getClass() == CLASS_WARLOCK)
