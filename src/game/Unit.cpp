@@ -5480,23 +5480,37 @@ bool Unit::IsSpellCrit(Unit *pVictim, SpellEntry const *spellProto, SpellSchoolM
                 }
 
                 // scripted (increase crit chance ... against ... target by x%
-                AuraList const& mOverrideClassScript = GetAurasByType(SPELL_AURA_OVERRIDE_CLASS_SCRIPTS);
-                for(AuraList::const_iterator i = mOverrideClassScript.begin(); i != mOverrideClassScript.end(); ++i)
-                {
-                    if (!((*i)->isAffectedOnSpell(spellProto)))
-                        continue;
-                    switch((*i)->GetModifier()->m_miscvalue)
-                    {
-                        // Shatter
-                        case 849: if (pVictim->isFrozen()) crit_chance+= 10.0f; break;
-                        case 910: if (pVictim->isFrozen()) crit_chance+= 20.0f; break;
-                        case 911: if (pVictim->isFrozen()) crit_chance+= 30.0f; break;
-                        case 912: if (pVictim->isFrozen()) crit_chance+= 40.0f; break;
-                        case 913: if (pVictim->isFrozen()) crit_chance+= 50.0f; break;
-                        default:
-                            break;
-                    }
-                }
+				// Mage Talent Shatter:
+				float add_chance = 0;
+				if (HasAura(11170))
+						if (pVictim->isFrozen()) add_chance = 10.0f;
+				if (HasAura(12982))
+						if (pVictim->isFrozen()) add_chance = 20.0f;
+				if (HasAura(12983))
+						if (pVictim->isFrozen()) add_chance = 30.0f;
+				if (HasAura(12984))
+						if (pVictim->isFrozen()) add_chance = 40.0f;
+				if (HasAura(12985))
+						if (pVictim->isFrozen()) add_chance = 50.0f;
+				crit_chance += add_chance;
+				
+				  //              AuraList const& mOverrideClassScript = GetAurasByType(SPELL_AURA_OVERRIDE_CLASS_SCRIPTS);
+                //for(AuraList::const_iterator i = mOverrideClassScript.begin(); i != mOverrideClassScript.end();// ++i)
+               // {
+               //     if (!((*i)->isAffectedOnSpell(spellProto)))
+              //          continue;
+              //      switch((*i)->GetModifier()->m_miscvalue)
+             //       {
+                 //       // Shatter
+                //        case 849: if (pVictim->isFrozen()) crit_chance+= 10.0f; break;
+                //        case 910: if (pVictim->isFrozen()) crit_chance+= 20.0f; break;
+                //        case 911: if (pVictim->isFrozen()) crit_chance+= 30.0f; break;
+               //         case 912: if (pVictim->isFrozen()) crit_chance+= 40.0f; break;
+              //          case 913: if (pVictim->isFrozen()) crit_chance+= 50.0f; break;
+              //         default:
+              //              break;
+              //      }
+             //   }
             }
             break;
         }
