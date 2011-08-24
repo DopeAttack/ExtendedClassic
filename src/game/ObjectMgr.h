@@ -667,6 +667,7 @@ class ObjectMgr
         static HonorStanding* GetHonorStandingByGUID(uint32 guid,uint32 side);
         static HonorStanding* GetHonorStandingByPosition(uint32 position,uint32 side);
         HonorStandingList GetStandingListBySide(uint32 side);
+		HonorStandingList* GetStandingListPointerBySide(uint32 side);
         uint32 GetHonorStandingPositionByGUID(uint32 guid,uint32 side);
         void UpdateHonorStandingByGuid(uint32 guid,HonorStanding standing,uint32 side) ;
         void FlushRankPoints(uint32 dateTop);
