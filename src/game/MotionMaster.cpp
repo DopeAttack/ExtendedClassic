@@ -273,6 +273,9 @@ void MotionMaster::MoveChase(Unit* target, float dist, float angle)
     if (!target)
         return;
 
+	if (m_owner->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_CONFUSED) || m_owner->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_FLEEING))
+		return;
+		
     DEBUG_FILTER_LOG(LOG_FILTER_AI_AND_MOVEGENSS, "%s chase to %s", m_owner->GetGuidStr().c_str(), target->GetGuidStr().c_str());
 
     if (m_owner->GetTypeId() == TYPEID_PLAYER)
