@@ -143,7 +143,7 @@ void RealmList::UpdateRealms(bool init)
 
     ////                                               0   1     2        3     4     5           6         7                     8           9
     QueryResult *result = LoginDatabase.Query( "SELECT id, name, address, port, icon, realmflags, timezone, allowedSecurityLevel, population, realmbuilds FROM realmlist WHERE (realmflags & 1) = 0 ORDER BY name" );
-
+	
     ///- Circle through results and add them to the realm map
     if(result)
     {
@@ -165,7 +165,7 @@ void RealmList::UpdateRealms(bool init)
                 fields[0].GetUInt32(), fields[1].GetCppString(),fields[2].GetCppString(),fields[3].GetUInt32(),
                 fields[4].GetUInt8(), RealmFlags(realmflags), fields[6].GetUInt8(),
                 (allowedSecurityLevel <= SEC_ADMINISTRATOR ? AccountTypes(allowedSecurityLevel) : SEC_ADMINISTRATOR),
-                fields[8].GetFloat(), fields[9].GetCppString());
+                fields[8].GetFloat(), fields[9].GetString());
 
             if(init)
                 sLog.outString("Added realm \"%s\"", fields[1].GetString());
