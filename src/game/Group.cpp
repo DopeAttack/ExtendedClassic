@@ -262,6 +262,54 @@ Player* Group::GetInvited(const std::string& name) const
     return NULL;
 }
 
+void Group::SpoofGroupMemberFaction(Player* playerRemoved)
+{
+	if(sWorld.getConfig(CONFIG_BOOL_ALLOW_TWO_SIDE_INTERACTION_GROUP))
+	{
+		Player* player;
+		Player* member;
+		
+		for(member_citerator citr = m_memberSlots.begin(); citr != m_memberSlots.end(); ++citr)
+		{
+			player = sObjectMgr.GetPlayer(citr->guid);
+			if(!player || !player->GetSession() || player->GetGroup() != this)
+				continue;
+			
+			member->SendCreateUpdateToPlayer(player);			// update member faction
+			
+			if(Pet* pet = member->GetPet())
+				pet->SendCreateUpdateToPlayer(player);			// update members pet faction
+				
+			for(uint8 i = 0; i < MAX_TOTEM_SLOT; ++i)
+				if(Unit* totem = (Unit*)member->GetTotem((TotemSlot)i))
+					totem->SendCreateUpdateToPlayer				// update member´s totem´s factions
+		}
+		
+		if(playerRemoved)
+		{
+			//this player was already removed from the group, but stills needs unit flags to be updated
+			playerRemoved->SendCreateUpdateToPlayer(player);
+			
+			if(Pet* pet = playerRemoved->GetPet())
+				pet->SendCreateUpdateToPlayer(player);
+			
+			for(uint8 i = 0; i < MAX_TOTEM_SLOT; ++i)
+				if(Unit* totem = (Unit*)playerRemoved->GetTotem((TotemSlot)i))
+					totem->SendCreateUpdateToPlayer(player);
+			
+			player->SendCreateUpdateToPlayer(playerRemoved);
+			
+			if(Pet* pet = player->GetPet())
+				pet->SendCreateUpdateToPlayer(playerRemoved);
+				
+			for(uint8 i = 0; i < MAX_TOTEM_SLOT; ++i)
+				if(Unit* totem = (Unit*)player->GetTotem((TotemSlot)i))
+					totem->SendCreateUpdateToPlayer(playerRemoved);
+			}
+		}
+	}
+}	
+
 bool Group::AddMember(ObjectGuid guid, const char* name)
 {
     if (!_addMember(guid, name))
@@ -283,6 +331,8 @@ bool Group::AddMember(ObjectGuid guid, const char* name)
         // quest related GO state dependent from raid membership
         if(isRaidGroup())
             player->UpdateForQuestWorldObjects();
+		
+		SpoofGroupMemberFactions(NULL);
     }
 
     return true;
@@ -332,6 +382,9 @@ uint32 Group::RemoveMember(ObjectGuid guid, uint8 method)
         }
 
         SendUpdate();
+	
+	if(player)
+		SpoofGroupMemberFactions(player);		
     }
     // if group before remove <= 2 disband it
     else
@@ -404,6 +457,7 @@ void Group::Disband(bool hideDestroy)
         }
 
         _homebindIfInstance(player);
+		SpoofGroupMemberFactions(player);
     }
     RollId.clear();
     m_memberSlots.clear();

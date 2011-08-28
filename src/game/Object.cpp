@@ -44,6 +44,8 @@
 
 #include "TemporarySummon.h"
 
+#include "Config/ConfigEnv.h"
+
 Object::Object( )
 {
     m_objectTypeId      = TYPEID_OBJECT;
@@ -432,6 +434,37 @@ void Object::BuildValuesUpdate(uint8 updatetype, ByteBuffer * data, UpdateMask *
                     else
                         *data << (m_uint32Values[ index ] & ~UNIT_DYNFLAG_TAPPED);
                 }
+				else if(index == UNIT_FIELD_FACTIONTEMPLATE)
+				{
+					// spoof unit's faction if this and target are in a group together
+					bool set = false;
+					if(sWorld.getConfig(CONFIG_BOOL_ALLOW_TWO_SIDE_INTERACTION_GROUP) && target != this)
+					{
+						Player* thisOwner = NULL;
+						Player* targetOwner = NULL;
+						
+						// get the player that is controlling this
+						if(this->isType(TYPEMASK_UNIT))
+							thisOwner = ((Unit*)this)->GetCharmerOrOwnerPlayerOrPlayerItself();
+						
+						// get the player that is controlling target
+						targetOwner = target->GetCharmerOrOwnerPlayerOrPlayerItself();
+						
+						// check if both controllers are players
+						if(thisOwner && targetOwner)
+							// check both owners groups
+							if(thisOwner->GetGroup() && targetOwner->GetGroup() && thisOwner->GetGroup() == targetOwner->GetGroup())
+							{
+								// in same group, spoof faction!
+								*data << target->GetUInt32Value(UNIT_FIELD_FACTIONTEMPLATE);
+								 set = true;
+							}
+					}
+					
+					// if faction was not spoofed, default to normal behavior
+					if(!set)
+						*data << m_uint32Values[ index ];
+				}					
                 else
                 {
                     // send in current format (float as float, uint32 as uint32)
